@@ -31,8 +31,6 @@ let PLAYER = {
     xDirection: 25,
 }
 
-
-
 let maxMeteorSize = 55;
 let maxMeteorSpeed = 8;
 let minMeteorSpeed = 2;
@@ -60,8 +58,6 @@ let TARGET = {
     speed: 2,
 }
 
-
-
 function initMeteors() {
     var i = 0;
     do {
@@ -79,8 +75,6 @@ function initMeteors() {
     while (i < countMeteors)
 
 }
-
-
 
 let BulletsCount = 10;
 let bullets = [];
@@ -105,9 +99,6 @@ function initBullets() {
 
 initBullets();
 
-
-
-
 let hero = new Image(), bg = new Image(), meteor = new Image(), live = new Image(), bul = new Image(), medkit = new Image(), target = new Image();
 
 bg.src = 'img/bcg.png';
@@ -118,7 +109,7 @@ bul.src = 'img/bullet.png';
 medkit.src = 'img/medkit.png';
 target.src = 'img/target.png';
 
-target.onload = function() {
+target.onload = function () {
     TARGET.target = target;
 }
 
@@ -151,9 +142,9 @@ function drawTarget() {
         ctx.drawImage(TARGET.target, TARGET.x, TARGET.y, targetSize, targetSize);
     }
     else {
-        ctx.fillStyle = "yellow"; 
+        ctx.fillStyle = "yellow";
         ctx.beginPath();
-        ctx.arc(TARGET.x, TARGET.y, TARGET/2, 0, Math.PI * 2);
+        ctx.arc(TARGET.x, TARGET.y, TARGET / 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
     }
@@ -166,7 +157,10 @@ function respawnTarget() {
 
 function updateTarget() {
     TARGET.y += TARGET.speed;
-    if (PLAYER.score % 10 === 0) {
+    if (PLAYER.score % 15 === 0) {
+        respawnTarget();
+    }
+    if (TARGET.y > GAME.height) {
         respawnTarget();
     }
 
@@ -183,21 +177,21 @@ function drawBullet() {
             ctx.drawImage(PLAYER.bullet, bullets[i].x, bullets[i].y, bulletSize, bulletSize * 1.4);
         } else {
             ctx.beginPath();
-            ctx.arc(bullets[i].x, bullets[i].y, bulletSize/2, 0, Math.PI * 2);
+            ctx.arc(bullets[i].x, bullets[i].y, bulletSize / 2, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
         }
     }
 }
 
-function updateBullet () {
+function updateBullet() {
     for (let i in bullets) {
         if (bullets[i].uses === true) {
             bullets[i].y -= bulletSpeed;
-            if (bullets[i].y <= 0){
+            if (bullets[i].y <= 0) {
                 respawnBullet(i);
             }
-            
+
             var mx = TARGET.x;
             var my = TARGET.y;
             var mw = targetSize;
@@ -206,19 +200,20 @@ function updateBullet () {
             var ycheck = (bullets[i].y + bullets[i].size >= my && bullets[i].y <= my + mh);
 
             if (xcheck && ycheck) {
-                PLAYER.score+= 3;
+                for (let i = 0; i<3; i++) {
+                    PLAYER.score++;
+                    if (PLAYER.score % 50 === 0) {
+                        MED.resp = true;
+                    }
+                }
                 respawnBullet(i);
                 hideTarget();
             }
-            
+
         }
         else {
             bullets[i].x = PLAYER.posX + PLAYER.width / 2
         }
-        
-        // var killPositionY = (bullets[i].y + bullets[i].size >= PLAYER.posY && bullets[i].y <= PLAYER.posY + PLAYER.height);
-        // var killPositionX = (bullets[i].x - bullets[i].size <= PLAYER.posX + PLAYER.width / 2) && (bullets[i].x + bullets[i].size / 2 >= PLAYER.posX);
-        // var scoreUpdate = bullets[i].y >= GAME.height + bullets[i].size;
 
     }
 }
@@ -289,9 +284,10 @@ function respawnMeteor(i) {
 
 let MED = {
     size: 50,
-    x:  Math.floor(Math.random() * (GAME.width - 50)),
+    x: Math.floor(Math.random() * (GAME.width - 50)),
     y: -50,
     speed: Math.floor(Math.random() * maxMeteorSpeed + minMeteorSpeed),
+    resp: false,
 }
 
 function drawMed() {
@@ -313,11 +309,22 @@ function updateMed() {
         } else {
             PLAYER.health++
         }
-        
+
         hideMed();
     }
-    if (PLAYER.score > 49 && PLAYER.score % 50 === 0) {
+
+    for (let i in bullets) {
+        var cheky = (MED.y + MED.size >= bullets[i].y && MED.y <= bullets[i].y + bullets[i].size);
+        var chekx = (MED.x - MED.size <= bullets[i].x + bullets[i].size / 2) && (MED.x + MED.size / 2 >= bullets[i].x);
+        if (chekx && cheky) {
+            PLAYER.health++
+            hideMed();
+        }
+    }
+
+    if ((PLAYER.score > 49 && PLAYER.score % 50 === 0) || MED.resp === true) {
         respawnMed();
+        MED.resp = false;
     }
 
 }
@@ -325,7 +332,6 @@ function updateMed() {
 function respawnMed() {
     MED.x = Math.floor(Math.random() * (GAME.width - MED.size));
     MED.y = -MED.size;
-    MED.speed = Math.floor(Math.random() * maxMeteorSpeed + 10);
 
 }
 
@@ -353,21 +359,6 @@ function drawInfo() {
     }
 
     ctx.fillText("рестарт - R", InfoWindow.x + 10, 280)
-    // if (PLAYER.live) {
-    //     drawLives();
-    // }
-    // else{
-    //     ctx.fillStyle = InfoWindow.backgroundColor;
-    //     ctx.beginPath();
-    //     ctx.rect(InfoWindow.x, 0, InfoWindow.width, InfoWindow.height);
-    //     ctx.fill();
-    //     ctx.fillStyle = InfoWindow.textColor;
-    //     ctx.font = "30px serif";
-    //     ctx.fillText("Yore scrore:", InfoWindow.x + 10, 50);
-    //     ctx.fillText(PLAYER.score, InfoWindow.x + 10, 85);
-    //     ctx.fillText("Your lives:", InfoWindow + 10, 120);
-    //     ctx.fillText(PLAYER.health, InfoWindow.x + 10, 155)
-    // }
 
 }
 
@@ -379,7 +370,6 @@ function drawLives() {
 
     }
 }
-
 
 function drawBCG() {
     canvas.width = canWidth + InfoWindow.width;
@@ -427,7 +417,7 @@ function play() {
         requestAnimationFrame(play);
     }
     else {
-        if (GAME.ifLost == false && GAME.pause == true){
+        if (GAME.ifLost == false && GAME.pause == true) {
             gameOverAlert("Игра приостановлена");
         } else {
             drawFrame();
@@ -450,16 +440,15 @@ function restart() {
 }
 
 function pause() {
-    if (GAME.pause === false){
+    if (GAME.pause === false) {
         alert("нажмите esc для того чтоб родолжить");
         return false
-    } else{
+    } else {
         return True
         play()
     }
-    
-}
 
+}
 
 function gameOverAlert(text) {
     ctx.fillStyle = "red";
