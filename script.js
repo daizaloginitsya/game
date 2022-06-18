@@ -38,9 +38,6 @@ let maxMeteorSpeed = 8;
 let minMeteorSpeed = 2;
 let minMeteorSize = 30;
 
-// let bullet = {
-//     size
-// }
 
 let METEOR = {
     posX: Math.floor(Math.random() * (GAME.width - maxMeteorSize)),
@@ -54,6 +51,16 @@ let METEOR = {
 let METEORS = [];
 let countMeteors = 3;
 let meteorSize = 20;
+
+
+let targetSize = 50;
+let TARGET = {
+    x: Math.floor(Math.random() * (GAME.width - targetSize)),
+    y: -targetSize,
+    speed: 2,
+}
+
+
 
 function initMeteors() {
     var i = 0;
@@ -72,7 +79,36 @@ function initMeteors() {
     while (i < countMeteors)
 
 }
-let hero = new Image(), bg = new Image(), meteor = new Image(), live = new Image(), bul = new Image(), medkit = new Image();
+
+
+
+let BulletsCount = 10;
+let bullets = [];
+let bulletSize = 25;
+let bulletSpeed = 20;
+
+function initBullets() {
+    var i = 0;
+    do {
+        bullets[i] = {
+            x: PLAYER.posX + PLAYER.width / 2,
+            y: 10000,
+            speed: bulletSpeed,
+            size: bulletSize,
+            uses: false,
+        }
+        console.log(i);
+        i++;
+    }
+    while (i < BulletsCount)
+}
+
+initBullets();
+
+
+
+
+let hero = new Image(), bg = new Image(), meteor = new Image(), live = new Image(), bul = new Image(), medkit = new Image(), target = new Image();
 
 bg.src = 'img/bcg.png';
 meteor.src = 'img/meteor.png';
@@ -80,9 +116,14 @@ hero.src = 'img/hero.png';
 live.src = 'img/live.png';
 bul.src = 'img/bullet.png';
 medkit.src = 'img/medkit.png';
+target.src = 'img/target.png';
+
+target.onload = function() {
+    TARGET.target = target;
+}
 
 bul.onload = function () {
-    PLAYER.bullet = bullet;
+    PLAYER.bullet = bul;
 }
 
 hero.onload = function () {
@@ -104,6 +145,93 @@ medkit.onload = function () {
 }
 
 initMeteors();
+
+function drawTarget() {
+    if (TARGET.target) {
+        ctx.drawImage(TARGET.target, TARGET.x, TARGET.y, targetSize, targetSize);
+    }
+    else {
+        ctx.fillStyle = "yellow"; 
+        ctx.beginPath();
+        ctx.arc(TARGET.x, TARGET.y, TARGET/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+function respawnTarget() {
+    TARGET.x = Math.floor(Math.random() * (GAME.width - METEOR.width));
+    TARGET.y = -targetSize;
+}
+
+function updateTarget() {
+    TARGET.y += TARGET.speed;
+    if (PLAYER.score % 10 === 0) {
+        respawnTarget();
+    }
+
+}
+
+function hideTarget() {
+    TARGET.y = 10000;
+}
+
+function drawBullet() {
+    for (let i in bullets) {
+        ctx.fillStyle = "white";
+        if (PLAYER.bullet) {
+            ctx.drawImage(PLAYER.bullet, bullets[i].x, bullets[i].y, bulletSize, bulletSize * 1.4);
+        } else {
+            ctx.beginPath();
+            ctx.arc(bullets[i].x, bullets[i].y, bulletSize/2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+}
+
+function updateBullet () {
+    for (let i in bullets) {
+        if (bullets[i].uses === true) {
+            bullets[i].y -= bulletSpeed;
+            if (bullets[i].y <= 0){
+                respawnBullet(i);
+            }
+            
+            var mx = TARGET.x;
+            var my = TARGET.y;
+            var mw = targetSize;
+            var mh = targetSize;
+            var xcheck = (bullets[i].x - bullets[i].size <= mx + mw / 2) && (bullets[i].x + bullets[i].size / 2 >= mx);
+            var ycheck = (bullets[i].y + bullets[i].size >= my && bullets[i].y <= my + mh);
+
+            if (xcheck && ycheck) {
+                PLAYER.score+= 3;
+                respawnBullet(i);
+                hideTarget();
+            }
+            
+        }
+        else {
+            bullets[i].x = PLAYER.posX + PLAYER.width / 2
+        }
+        
+        // var killPositionY = (bullets[i].y + bullets[i].size >= PLAYER.posY && bullets[i].y <= PLAYER.posY + PLAYER.height);
+        // var killPositionX = (bullets[i].x - bullets[i].size <= PLAYER.posX + PLAYER.width / 2) && (bullets[i].x + bullets[i].size / 2 >= PLAYER.posX);
+        // var scoreUpdate = bullets[i].y >= GAME.height + bullets[i].size;
+
+    }
+}
+
+function respawnBullet(i) {
+    bullets[i] = {
+        x: PLAYER.posX + PLAYER.width / 2,
+        y: 10000,
+        speed: bulletSpeed,
+        size: bulletSize,
+        uses: false,
+    }
+}
 
 function drawMeteor() {
     for (let i in METEORS) {
@@ -283,23 +411,27 @@ function drawFrame() {
     drawInfo();
     drawPlayer();
     drawMeteor();
+    drawTarget();
     drawMed();
+    drawBullet();
 }
 
 drawBCG();
 function play() {
     if (GAME.ifLost == false && GAME.pause == false) {
         drawFrame();
+        updateBullet();
         updateMeteor();
         updateMed();
+        updateTarget();
         requestAnimationFrame(play);
     }
     else {
         if (GAME.ifLost == false && GAME.pause == true){
             gameOverAlert("Игра приостановлена");
         } else {
+            drawFrame();
             gameOverAlert("Лох");
-            alert("ЛОХ");
         }
     }
 }
@@ -330,6 +462,8 @@ function pause() {
 
 
 function gameOverAlert(text) {
+    ctx.fillStyle = "red";
+    ctx.fillRect(0, 0, GAME.width, GAME.height)
     ctx.font = "60px Arial";
     ctx.fillStyle = "white";
     ctx.fillText(text, 200, 400);
@@ -349,10 +483,18 @@ function initEventListener() {
     window.addEventListener("click", OnMouseClick);
 }
 
-let bullets = []
+
 
 function OnMouseClick() {
-
+    for (let i in bullets) {
+        uses = bullets[i].uses;
+        if (uses === false) {
+            bullets[i].y = PLAYER.posY + 10;
+            bullets[i].uses = true;
+            freebullet = true;
+            break
+        }
+    }
 }
 
 function onMouseMove(event) {
