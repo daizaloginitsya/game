@@ -246,7 +246,6 @@ function drawMeteor() {
 
 function updateMeteor() {
     for (let i in METEORS) {
-        METEOR.posY += METEOR.speed;
         METEORS[i].y += METEORS[i].speed;
         var losePositionY = (METEORS[i].y + METEORS[i].size >= PLAYER.posY && METEORS[i].y <= PLAYER.posY + PLAYER.height);
         var losePositionX = (METEORS[i].x - METEORS[i].size <= PLAYER.posX + PLAYER.width / 2) && (METEORS[i].x + METEORS[i].size / 2 >= PLAYER.posX);
@@ -450,12 +449,21 @@ function pause() {
 
 }
 
+lose = new Image()
+lose.src = 'img/lose.jpg'
+lose.onload = function() {
+    GAME.loseimg = lose;
+}
+
 function gameOverAlert(text) {
     ctx.fillStyle = "red";
     ctx.fillRect(0, 0, GAME.width, GAME.height)
-    ctx.font = "60px Arial";
-    ctx.fillStyle = "white";
-    ctx.fillText(text, 200, 400);
+    // ctx.font = "60px Arial";
+    // ctx.fillStyle = "white";
+    // ctx.fillText(text, 200, 400);
+    if (GAME.loseimg) {
+        ctx.drawImage(GAME.loseimg, 0, 200, 600, 600*0.5625)
+    }
 }
 
 function drawCircle(color, radius, x, y) {
