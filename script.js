@@ -4,6 +4,7 @@ let GAME = {
     ifLost: false,
     bcgcolor: "red",
     pause: false,
+    record: 0,
 }
 
 let InfoWindow = {
@@ -422,20 +423,29 @@ function play() {
             drawFrame();
             gameOverAlert("Лох");
         }
+        if (PLAYER.score > GAME.record) {
+            console.log(PLAYER.score)
+            document.getElementById("record").innerHTML = "Рекорд: " + PLAYER.score;
+            GAME.record = PLAYER.score;
+        }
     }
 }
 
 function restart() {
     initMeteors();
     PLAYER.health = 3;
-    PLAYER.score = 0;
+    
     PLAYER.posX = 277;
-    GAME.ifLost = false;
     maxMeteorSize = 55;
     maxMeteorSpeed = 8;
     minMeteorSpeed = 2;
     minMeteorSize = 30;
-    play();
+    PLAYER.score = 0;
+    if (GAME.ifLost === true) {
+        GAME.ifLost = false;
+        play();
+    }
+    
 }
 
 function pause() {
