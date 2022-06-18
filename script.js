@@ -344,6 +344,7 @@ function drawCircle(color, radius, x, y) {
 
 function initEventListener() {
     window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("touchmove", onMouseMove);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("click", OnMouseClick);
 }
